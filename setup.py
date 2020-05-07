@@ -8,7 +8,7 @@ with open("README.md", "r") as readme_file:
 requirements = ["requests>=2"]
 
 setup(
-    name="ai_coops_flooding",
+    name="ai_coops",
     version="0.0.1",
     author="Erick DiFiore",
     author_email="47676503+phile13@users.noreply.github.com",
