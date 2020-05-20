@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import numpy as np
+from os import path
 from keras.models import model_from_json
 
 
@@ -55,8 +56,11 @@ def save_model(model, json_model_filename, h5_model_weights_filename):
         with open(json_model_filename, "w") as json_file:
             json_file.write(model_json)
 
+        if path.exists(json_model_filename) is False:
+            return False
+
         model.save_weights(h5_model_weights_filename)
-        return True
+        return path.exists(h5_model_weights_filename)
     except Exception:
         return False
 
