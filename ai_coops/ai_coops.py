@@ -111,6 +111,28 @@ def read_station_csv(csv_filename):
     return np.loadtxt(csv_filename, delimiter=',', skiprows=1, usecols=use_cols, converters={2: convert_sensor_used, 14: convert_if_verified_null})
 
 
+def read_part_station_csv(csv_filename, start=0, length=1000):
+    """
+
+    Parameters
+    ----------
+    csv_filename : STRING
+        Name of csv file to read in.
+    start : INT
+        Where to start grabbing rows, not including skipped header row. The default is 0.
+    length : INT
+        How many rows to grab.  The default is 1000.
+
+    Returns
+    -------
+    Numpy Array
+        Station Data.
+
+    """
+    use_cols = (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
+    return np.loadtxt(csv_filename, delimiter=',', skiprows=(start+1), max_rows=length, usecols=use_cols, converters={2: convert_sensor_used, 14: convert_if_verified_null})
+
+
 def convert_sensor_used(sensor_used):
     mapping = {b"A1": 1.0, b"Y1": 2.0, b"N1": 3.0, b"NT": 4.0}
 
