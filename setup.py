@@ -9,10 +9,10 @@ requirements = ["requests>=2"]
 
 setup(
     name="ai_coops",
-    version="0.0.1",
+    version="0.0.2",
     author="Erick DiFiore",
     author_email="47676503+phile13@users.noreply.github.com",
-    description="A Package for the webcam flooding project with NOAA CO-OPS",
+    description="A Package for projects with NOAA CO-OPS",
     long_description=readme,
     long_description_content_type="text/markdown",
     url="https://github.com/phile13/ai_coops_flooding",
