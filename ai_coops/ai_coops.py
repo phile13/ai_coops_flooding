@@ -22,13 +22,12 @@ def load_model(json_model_filename, h5_model_weights_filename):
     """
 
     try:
-        loaded_model = None
         with open(json_model_filename, 'r') as json_file:
-            json_model = json.load(json_file)
-            loaded_model = model_from_json(json_model)
+            loaded_model = model_from_json(json_file.read())
 
-        loaded_model.load_weights(h5_model_weights_filename)
-        return loaded_model
+            loaded_model.load_weights(h5_model_weights_filename)
+            return loaded_model
+        return None
     except Exception:
         return None
 
