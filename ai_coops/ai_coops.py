@@ -147,3 +147,59 @@ def convert_sensor_used(sensor_used):
 
 def convert_if_verified_null(verified):
     return float(verified) if verified != b'' else 0.0
+
+
+def shuffle_identically(x, y):
+    """
+
+    Parameters
+    ----------
+    x : Numpy Array
+        Array 1.
+    y : Numpy Array
+        Array 2.
+
+    Returns
+    -------
+    TYPE
+        Shuffled Array 1.
+    TYPE
+        Shuffled Array 2.
+
+    """
+    shuffled_indicies = np.arange(x.shape[0])
+    np.random.shuffle(shuffled_indicies)
+    return (x[shuffled_indicies], y[shuffled_indicies])
+
+
+def station_data_generator(station_csv_filenames, window_size, data_start, data_size, shuffle=True):
+    """
+
+    Parameters
+    ----------
+    station_csv_filenames : String
+        Name of CSV file with Station Data.
+    window_size : Int
+        Size of sliding window.
+    data_start : Int
+        Starting row in data.
+    data_size : Int
+        Number of rows to collect from data.
+    shuffle : TYPE, optional
+        Whether to shuffle the windowed data that is yielded. The default is True.
+
+    Yields
+    ------
+    x : Numpy Array
+        X Data.
+    y : Numpy Array
+        Y Data.
+
+    """
+    while True:
+        for station_csv_filename in station_csv_filenames:
+            data = read_part_station_csv(station_csv_filename, data_start, data_size)
+            x, y = create_sliding_window_dataset(data, window_size)
+            if shuffle:
+                x, y = shuffle_identically(x, y)
+            yield x, y
