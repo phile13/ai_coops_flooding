@@ -95,13 +95,15 @@ def create_sliding_window_dataset(data, window_size, x_cols=(0, 1, 2, 3, 4, 5, 6
     return (np.array(X), np.array(Y))
 
 
-def read_station_csv(csv_filename):
+def read_station_csv(csv_filename, use_cols=(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)):
     """
 
     Parameters
     ----------
     csv_filename : STRING
         Name of csv file to read in.
+    use_cols : Tuple of INTs. The default is (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15).
+        list of cols to be pulled from csv
 
     Returns
     -------
@@ -109,7 +111,6 @@ def read_station_csv(csv_filename):
         Station Data.
 
     """
-    use_cols = (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
     return np.loadtxt(csv_filename, delimiter=',', skiprows=1, usecols=use_cols, converters={2: convert_sensor_used, 14: convert_if_verified_null})
 
 
@@ -125,7 +126,7 @@ def read_part_station_csv(csv_filename, start=0, length=1000, use_cols=(2, 3, 4,
     length : INT
         How many rows to grab.  The default is 1000.
     use_cols : Tuple of INTs
-        list of cols to be pulled from csv
+        list of cols to be pulled from csv. The default is (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15).
     Returns
     -------
     Numpy Array
@@ -171,7 +172,7 @@ def shuffle_identically(x, y):
     return (x[shuffled_indicies], y[shuffled_indicies])
 
 
-def station_data_generator(station_csv_filenames, window_size, data_start, data_size, shuffle=True, x_cols=(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13), y_cols=(14, 15)):
+def station_data_generator(station_csv_filenames, window_size, data_start, data_size, shuffle=True, x_cols=[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], y_cols=[14, 15]):
     """
 
     Parameters
@@ -186,9 +187,9 @@ def station_data_generator(station_csv_filenames, window_size, data_start, data_
         Number of rows to collect from data.
     shuffle : TYPE, optional
         Whether to shuffle the windowed data that is yielded. The default is True.
-    x_cols : Tuple of INTs
+    x_cols : List of INTs
         list of cols that are the x values
-    y_cols : Tuple of INTs
+    y_cols : List of INTs
         list of cols that are the y values
     Yields
     ------
@@ -212,7 +213,7 @@ def station_data_generator(station_csv_filenames, window_size, data_start, data_
 def adjust_cols(use_cols, x_cols, y_cols):
     x_cols_adj = []
     y_cols_adj = []
-    for index in len(use_cols):
+    for index in range(len(use_cols)):
         use_col = use_cols[index]
         try:
             x_cols.index(use_col)
@@ -224,7 +225,7 @@ def adjust_cols(use_cols, x_cols, y_cols):
             y_cols_adj.append(index)
         except Exception:
             pass
-    return tuple(x_cols_adj), tuple(y_cols_adj)
+    return x_cols_adj, y_cols_adj
 
 
 def prep_station_data_generator(station_csv_filenames, window_size, data_start, data_size, shuffle=True):
