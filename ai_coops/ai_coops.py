@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import json
 import numpy as np
 from os import path
 from keras.models import model_from_json
@@ -64,7 +63,7 @@ def save_model(model, json_model_filename, h5_model_weights_filename):
         return False
 
 
-def create_sliding_window_dataset(data, window_size, x_start=0, x_stop=-2, y_start=-2, y_stop=None):
+def create_sliding_window_dataset(data, window_size, x_cols=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11), y_cols=(12, 13)):
     """
     Parameters
     ----------
@@ -91,8 +90,8 @@ def create_sliding_window_dataset(data, window_size, x_start=0, x_stop=-2, y_sta
     Y = []
     num_records = len(data)
     for outer_index in range(num_records-window_size):
-        X.append(np.array(data[outer_index:outer_index+window_size, x_start:x_stop]))
-        Y.append(np.array(data[outer_index:outer_index+window_size, y_start:y_stop]))
+        X.append(np.array(data[outer_index:outer_index+window_size, x_cols]))
+        Y.append(np.array(data[outer_index:outer_index+window_size, y_cols]))
     return (np.array(X), np.array(Y))
 
 
@@ -114,7 +113,7 @@ def read_station_csv(csv_filename):
     return np.loadtxt(csv_filename, delimiter=',', skiprows=1, usecols=use_cols, converters={2: convert_sensor_used, 14: convert_if_verified_null})
 
 
-def read_part_station_csv(csv_filename, start=0, length=1000):
+def read_part_station_csv(csv_filename, start=0, length=1000, use_cols=(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)):
     """
 
     Parameters
@@ -125,14 +124,14 @@ def read_part_station_csv(csv_filename, start=0, length=1000):
         Where to start grabbing rows, not including skipped header row. The default is 0.
     length : INT
         How many rows to grab.  The default is 1000.
-
+    use_cols : Tuple of INTs
+        list of cols to be pulled from csv
     Returns
     -------
     Numpy Array
         Station Data.
 
     """
-    use_cols = (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
     return np.loadtxt(csv_filename, delimiter=',', skiprows=(start+1), max_rows=length, usecols=use_cols, converters={2: convert_sensor_used, 14: convert_if_verified_null})
 
 
@@ -172,7 +171,63 @@ def shuffle_identically(x, y):
     return (x[shuffled_indicies], y[shuffled_indicies])
 
 
-def station_data_generator(station_csv_filenames, window_size, data_start, data_size, shuffle=True):
+def station_data_generator(station_csv_filenames, window_size, data_start, data_size, shuffle=True, x_cols=(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13), y_cols=(14, 15)):
+    """
+
+    Parameters
+    ----------
+    station_csv_filenames : String
+        Name of CSV file with Station Data.
+    window_size : Int
+        Size of sliding window.
+    data_start : Int
+        Starting row in data.
+    data_size : Int
+        Number of rows to collect from data.
+    shuffle : TYPE, optional
+        Whether to shuffle the windowed data that is yielded. The default is True.
+    x_cols : Tuple of INTs
+        list of cols that are the x values
+    y_cols : Tuple of INTs
+        list of cols that are the y values
+    Yields
+    ------
+    x : Numpy Array
+        X Data.
+    y : Numpy Array
+        Y Data.
+
+    """
+    use_cols = sorted(x_cols + y_cols)
+    x_cols_adj, y_cols_adj = adjust_cols(use_cols, x_cols, y_cols)
+    while True:
+        for station_csv_filename in station_csv_filenames:
+            data = read_part_station_csv(station_csv_filename, data_start, data_size, use_cols)
+            x, y = create_sliding_window_dataset(data, window_size, x_cols_adj, y_cols_adj)
+            if shuffle:
+                x, y = shuffle_identically(x, y)
+            yield x, y
+
+
+def adjust_cols(use_cols, x_cols, y_cols):
+    x_cols_adj = []
+    y_cols_adj = []
+    for index in len(use_cols):
+        use_col = use_cols[index]
+        try:
+            x_cols.index(use_col)
+            x_cols_adj.append(index)
+        except Exception:
+            pass
+        try:
+            y_cols.index(use_col)
+            y_cols_adj.append(index)
+        except Exception:
+            pass
+    return tuple(x_cols_adj), tuple(y_cols_adj)
+
+
+def prep_station_data_generator(station_csv_filenames, window_size, data_start, data_size, shuffle=True):
     """
 
     Parameters
@@ -198,7 +253,8 @@ def station_data_generator(station_csv_filenames, window_size, data_start, data_
     """
     while True:
         for station_csv_filename in station_csv_filenames:
-            data = read_part_station_csv(station_csv_filename, data_start, data_size)
+            data = read_part_station_csv(station_csv_filename, data_start, data_size)[0:-2]
+
             x, y = create_sliding_window_dataset(data, window_size)
             if shuffle:
                 x, y = shuffle_identically(x, y)
