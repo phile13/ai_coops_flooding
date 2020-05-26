@@ -172,7 +172,7 @@ def shuffle_identically(x, y):
     return (x[shuffled_indicies], y[shuffled_indicies])
 
 
-def station_data_generator(station_csv_filenames, window_size, data_start, data_size, shuffle=True, x_cols=[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], y_cols=[14, 15]):
+def station_data_generator(station_csv_filenames, window_size, data_start, data_size, shuffle=True, x_cols=[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], y_cols=[14, 15], reshape_x=None, reshape_y=None):
     """
 
     Parameters
@@ -191,6 +191,10 @@ def station_data_generator(station_csv_filenames, window_size, data_start, data_
         list of cols that are the x values
     y_cols : List of INTs
         list of cols that are the y values
+    reshape_x : Tuple
+        reshape tuple. Default None, means do not reshape x
+    reshape_y : Tuple
+        reshape tuple. Default None, means do not reshape y
     Yields
     ------
     x : Numpy Array
@@ -205,8 +209,14 @@ def station_data_generator(station_csv_filenames, window_size, data_start, data_
         for station_csv_filename in station_csv_filenames:
             data = read_part_station_csv(station_csv_filename, data_start, data_size, use_cols)
             x, y = create_sliding_window_dataset(data, window_size, x_cols_adj, y_cols_adj)
+            print(y.shape)
             if shuffle:
                 x, y = shuffle_identically(x, y)
+            if reshape_x:
+                x = x.reshape(reshape_x)
+            if reshape_y:
+                y = y.reshape(reshape_y)
+            print(y.shape)
             yield x, y
 
 
