@@ -209,14 +209,12 @@ def station_data_generator(station_csv_filenames, window_size, data_start, data_
         for station_csv_filename in station_csv_filenames:
             data = read_part_station_csv(station_csv_filename, data_start, data_size, use_cols)
             x, y = create_sliding_window_dataset(data, window_size, x_cols_adj, y_cols_adj)
-            print(y.shape)
             if shuffle:
                 x, y = shuffle_identically(x, y)
             if reshape_x:
                 x = x.reshape(reshape_x)
             if reshape_y:
                 y = y.reshape(reshape_y)
-            print(y.shape)
             yield x, y
 
 
