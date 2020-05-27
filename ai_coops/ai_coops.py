@@ -65,24 +65,21 @@ def save_model(model, json_model_filename, h5_model_weights_filename):
 
 def create_sliding_window_dataset(data, window_size, x_cols=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11), y_cols=(12, 13)):
     """
+
     Parameters
     ----------
     data : Array of Data
         Array of Data.
-    window_size : TYPE
+    window_size : INT
         The size of window which you will slide across the dataset.
-    x_start : TYPE, optional
-        Start of Slice for the X data. The default is 0.
-    x_stop : TYPE, optional
-        End of Slice for the X data. The default is -2.
-    y_start : TYPE, optional
-        Start of Slice for the y data.  The default is -2.
-    y_stop : TYPE, optional
-        End of Slice for the y data. The default is None.
+    x_cols : Array INT, optional
+        Array of columns to use. The default is (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11).
+    y_cols : Array INT, optional
+        Array of columns to use. The default is (12, 13).
 
     Returns
     -------
-    2D Tuple of X data and y data
+    2D Tuple of X data and a single y data point
         This is the windowed model X and y data.
 
     """
@@ -92,6 +89,35 @@ def create_sliding_window_dataset(data, window_size, x_cols=(0, 1, 2, 3, 4, 5, 6
     for outer_index in range(num_records-window_size):
         X.append(np.array(data[outer_index:outer_index+window_size, x_cols]))
         Y.append(np.array(data[outer_index:outer_index+window_size, y_cols]))
+    return (np.array(X), np.array(Y))
+
+
+def missing_y_create_sliding_window_dataset(data, window_size, y_col=-1):
+    """
+    Parameters
+    ----------
+    data : Array of Data
+        Array of Data.
+    window_size : INT
+        The size of window which you will slide across the dataset.
+    y_col : INT
+        The col index of the y value
+
+    Returns
+    -------
+    2D Tuple of X data and a single y data point
+        This is the windowed model X and y data. The y value that is to be predicted is set to -9999
+
+    """
+    X = []
+    Y = []
+    num_records = len(data)
+    for outer_index in range(num_records-window_size):
+        row = np.array(data[outer_index:outer_index+window_size, :])
+        y = row[-1][y_col]
+        row[-1][y_col] = -9999
+        X.append(row)
+        Y.append(y)
     return (np.array(X), np.array(Y))
 
 
@@ -215,6 +241,43 @@ def station_data_generator(station_csv_filenames, window_size, data_start, data_
                 x = x.reshape(reshape_x)
             if reshape_y:
                 y = y.reshape(reshape_y)
+            yield x, y
+
+
+def missing_y_station_data_generator(station_csv_filenames, window_size, data_start, data_size, shuffle=True, x_cols=[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], y_col=14):
+    """
+
+    Parameters
+    ----------
+    station_csv_filenames : String
+        Name of CSV file with Station Data.
+    window_size : Int
+        Size of sliding window.
+    data_start : Int
+        Starting row in data.
+    data_size : Int
+        Number of rows to collect from data.
+    shuffle : TYPE, optional
+        Whether to shuffle the windowed data that is yielded. The default is True.
+    x_cols : List of INTs
+        list of cols that are the x values
+    y_col : List of INTs
+        list of cols that are the y values
+    Yields
+    ------
+    x : Numpy Array
+        X Data.
+    y : Numpy Array
+        Y Data.
+
+    """
+    use_cols = sorted(x_cols)
+    while True:
+        for station_csv_filename in station_csv_filenames:
+            data = read_part_station_csv(station_csv_filename, data_start, data_size, use_cols)
+            x, y = missing_y_create_sliding_window_dataset(data, window_size, x_cols.index(y_col))
+            if shuffle:
+                x, y = shuffle_identically(x, y)
             yield x, y
 
 
