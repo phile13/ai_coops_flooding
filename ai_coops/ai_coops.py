@@ -244,7 +244,7 @@ def station_data_generator(station_csv_filenames, window_size, data_start, data_
             yield x, y
 
 
-def missing_y_station_data_generator(station_csv_filenames, window_size, data_start, data_size, shuffle=True, x_cols=[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], y_col=14):
+def missing_y_station_data_generator(station_csv_filenames, window_size, data_start, data_size, shuffle=True, x_cols=[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], y_col=14, true_pairs=None):
     """
 
     Parameters
@@ -263,6 +263,8 @@ def missing_y_station_data_generator(station_csv_filenames, window_size, data_st
         list of cols that are the x values
     y_col : List of INTs
         list of cols that are the y values
+    true_pairs : 2D array of INTs
+        Sets row[true_pair[1]] = 9999 if that row[true_pair[0]] == 0
     Yields
     ------
     x : Numpy Array
@@ -275,6 +277,8 @@ def missing_y_station_data_generator(station_csv_filenames, window_size, data_st
     while True:
         for station_csv_filename in station_csv_filenames:
             data = read_part_station_csv(station_csv_filename, data_start, data_size, use_cols)
+            if true_pairs is not None:
+                data = fix_missing_y_data(data, use_cols, true_pairs)
             x, y = missing_y_create_sliding_window_dataset(data, window_size, x_cols.index(y_col))
             if shuffle:
                 x, y = shuffle_identically(x, y)
@@ -297,6 +301,26 @@ def adjust_cols(use_cols, x_cols, y_cols):
         except Exception:
             pass
     return x_cols_adj, y_cols_adj
+
+
+def fix_missing_y_data(data, use_cols, true_pairs):
+    fixed_data = []
+    true_pairs_adj = adjust_true_pairs(use_cols, true_pairs)
+    for outer_index in range(len(data)):
+        row = data[outer_index]
+        for inner_index in range(len(true_pairs_adj)):
+            if row[true_pairs_adj[inner_index][0]] == 0:
+                row[true_pairs_adj[inner_index][1]] = 9999
+        fixed_data.append(row)
+    return fixed_data
+
+
+def adjust_true_pairs(use_cols, true_pairs):
+    true_pairs_adj = []
+    for index in range(len(true_pairs)):
+        true_pair = true_pairs[index]
+        true_pairs_adj.append((use_cols.index(true_pair[0]), use_cols.index(true_pair[1])))
+    return true_pairs_adj
 
 
 def prep_station_data_generator(station_csv_filenames, window_size, data_start, data_size, shuffle=True):
