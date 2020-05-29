@@ -285,6 +285,12 @@ def missing_y_station_data_generator(station_csv_filenames, window_size, data_st
             yield x, y
 
 
+def missing_2y_station_data_generator(station_csv_filenames, window_size=6, data_start=0, data_size=87600, row_to_predict=-1, for_training=True, shuffle=True):
+    while True:
+        for station_csv_filename in station_csv_filenames:
+            yield missing_2y_create_sliding_window_dataset(station_csv_filename, window_size, data_start, data_size, row_to_predict, for_training, shuffle)
+
+
 def adjust_cols(use_cols, x_cols, y_cols):
     x_cols_adj = []
     y_cols_adj = []
@@ -321,6 +327,30 @@ def adjust_true_pairs(use_cols, true_pairs):
         true_pair = true_pairs[index]
         true_pairs_adj.append((use_cols.index(true_pair[0]), use_cols.index(true_pair[1])))
     return true_pairs_adj
+
+
+def missing_2y_create_sliding_window_dataset(station_csv_filename, window_size=6, data_start=0, data_length=87600, row_to_predict=-1, for_training=True, shuffle=False):
+    data = read_part_station_csv(station_csv_filename, data_start, data_length+window_size, [3, 4, 8, 9, 13, 14])
+
+    X = []
+    Y = []
+    s = np.array([0, 2, 4, 5])
+    for outer_index in range(len(data)):
+        data[outer_index][0] = data[outer_index][0] if data[outer_index][1] == 1 else 9999
+        data[outer_index][2] = data[outer_index][2] if data[outer_index][3] == 1 else 9999
+
+    for outer_index in range(data_length):
+        rows = np.array(data[outer_index:outer_index+window_size, s])
+        verified = rows[row_to_predict][-1]
+        rows[row_to_predict][-1] = 9999
+        if for_training:
+            rows[row_to_predict][0] = 9999
+
+        X.append(rows)
+        Y.append(verified)
+    if shuffle:
+        X, Y = shuffle_identically(X, Y)
+    return (np.array(X), np.array(Y))
 
 
 def prep_station_data_generator(station_csv_filenames, window_size, data_start, data_size, shuffle=True):
