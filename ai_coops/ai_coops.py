@@ -349,8 +349,8 @@ def missing_2y_create_sliding_window_dataset(station_csv_filename, window_size=6
         X.append(rows)
         Y.append(verified)
     if shuffle:
-        X, Y = shuffle_identically(X, Y)
-    return (np.array(X), np.array(Y))
+        X, Y = shuffle_identically(np.array(X), np.array(Y))
+    return (X, Y)
 
 
 def prep_station_data_generator(station_csv_filenames, window_size, data_start, data_size, shuffle=True):
