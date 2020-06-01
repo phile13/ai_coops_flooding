@@ -285,10 +285,11 @@ def missing_y_station_data_generator(station_csv_filenames, window_size, data_st
             yield x, y
 
 
-def missing_2y_station_data_generator(station_csv_filenames, window_size=6, data_start=0, data_size=87600, row_to_predict=-1, for_training=True, shuffle=True):
+def missing_2y_station_data_generator(station_csv_filenames, window_size=6, data_start=0, data_size=87600, num_data_iterations=6, row_to_predict=-1, for_training=True, shuffle=True):
     while True:
         for station_csv_filename in station_csv_filenames:
-            yield missing_2y_create_sliding_window_dataset(station_csv_filename, window_size, data_start, data_size, row_to_predict, for_training, shuffle)
+            for iteration in range(num_data_iterations):
+                yield missing_2y_create_sliding_window_dataset(station_csv_filename, window_size, data_start+(data_size*iteration), data_size, row_to_predict, for_training, shuffle)
 
 
 def adjust_cols(use_cols, x_cols, y_cols):
@@ -329,7 +330,7 @@ def adjust_true_pairs(use_cols, true_pairs):
     return true_pairs_adj
 
 
-def missing_2y_create_sliding_window_dataset(station_csv_filename, window_size=6, data_start=0, data_length=87600, row_to_predict=-1, for_training=True, shuffle=False):
+def missing_2y_create_sliding_window_dataset(station_csv_filename, window_size=6, data_start=0, data_length=87600, row_to_predict=-1, for_training=True, shuffle=False, add_problems=False):
     data = read_part_station_csv(station_csv_filename, data_start, data_length+window_size, [3, 4, 8, 9, 13, 14])
 
     X = []
@@ -342,10 +343,15 @@ def missing_2y_create_sliding_window_dataset(station_csv_filename, window_size=6
     for outer_index in range(data_length):
         rows = np.array(data[outer_index:outer_index+window_size, s])
         verified = rows[row_to_predict][-1]
+        if add_problems:
+            mask = np.random.randint(2, size=(window_size, 4))
+            mask[:, 2:] = 0
+            mask[-1, [0, -1]] = 1
+            X.append(np.ma.array(rows, mask=mask, fill_value=9999).filled())
+            Y.append(verified)
         rows[row_to_predict][-1] = 9999
         if for_training:
             rows[row_to_predict][0] = 9999
-
         X.append(rows)
         Y.append(verified)
     if shuffle:
