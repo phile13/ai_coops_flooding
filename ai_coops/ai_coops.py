@@ -337,7 +337,7 @@ def missing_2y_create_sliding_window_dataset(station_csv_filename, window_size=6
     Y = []
     s = np.array([0, 2, 4, 5])
 
-    if data_start > 0:
+    if data_start <= 0:
         mask = np.random.randint(2, size=(window_size, 4))
     else:
         mask = np.ones(shape=(window_size, 4))
