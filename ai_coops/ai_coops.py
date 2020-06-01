@@ -285,11 +285,11 @@ def missing_y_station_data_generator(station_csv_filenames, window_size, data_st
             yield x, y
 
 
-def missing_2y_station_data_generator(station_csv_filenames, window_size=6, data_start=0, data_size=87600, num_data_iterations=6, row_to_predict=-1, for_training=True, shuffle=True):
+def missing_2y_station_data_generator(station_csv_filenames, window_size=6, data_start=0, data_size=87600, num_data_iterations=6, row_to_predict=-1, for_training=True, shuffle=True, add_problems=False):
     while True:
         for station_csv_filename in station_csv_filenames:
             for iteration in range(num_data_iterations):
-                yield missing_2y_create_sliding_window_dataset(station_csv_filename, window_size, data_start+(data_size*iteration), data_size, row_to_predict, for_training, shuffle)
+                yield missing_2y_create_sliding_window_dataset(station_csv_filename, window_size, data_start+(data_size*iteration), data_size, row_to_predict, for_training, shuffle, add_problems)
 
 
 def adjust_cols(use_cols, x_cols, y_cols):
