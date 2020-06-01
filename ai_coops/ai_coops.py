@@ -336,6 +336,10 @@ def missing_2y_create_sliding_window_dataset(station_csv_filename, window_size=6
     X = []
     Y = []
     s = np.array([0, 2, 4, 5])
+    mask = np.random.randint(2, size=(window_size, 4))
+    mask[:, 2:] = 0
+    mask[-1, [0, -1]] = 1
+
     for outer_index in range(len(data)):
         data[outer_index][0] = data[outer_index][0] if data[outer_index][1] == 1 else 9999
         data[outer_index][2] = data[outer_index][2] if data[outer_index][3] == 1 else 9999
@@ -344,9 +348,6 @@ def missing_2y_create_sliding_window_dataset(station_csv_filename, window_size=6
         rows = np.array(data[outer_index:outer_index+window_size, s])
         verified = rows[row_to_predict][-1]
         if add_problems:
-            mask = np.random.randint(2, size=(window_size, 4))
-            mask[:, 2:] = 0
-            mask[-1, [0, -1]] = 1
             X.append(np.ma.array(rows, mask=mask, fill_value=9999).filled())
             Y.append(verified)
         rows[row_to_predict][-1] = 9999
