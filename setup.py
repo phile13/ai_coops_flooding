@@ -9,7 +9,7 @@ requirements = ["requests>=2"]
 
 setup(
     name="ai_coops",
-    version="0.0.18",
+    version="0.0.19",
     author="Erick DiFiore",
     author_email="47676503+phile13@users.noreply.github.com",
     description="A Package for projects with NOAA CO-OPS",
